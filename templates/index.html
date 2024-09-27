@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Appointment Booking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" 
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+    crossorigin="anonymous">
+    <style>
+        body {
+            background: linear-gradient(135deg, #FFDDC1, #FFABAB);
+            animation: fadeIn 1s ease, bgChange 10s infinite alternate; /* Add background color change */
+            color: #333;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1, p {
+            color: #4A4A4A;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 24px;
+        }
+        button {
+            background-color: #FF6F61; /* Coral */
+            font-size: 20px;
+            border: none;
+            transition: background-color 0.3s, transform 0.3s;
+            color: white;
+        }
+        button:hover {
+            background-color: #FF3B30; /* Darker coral on hover */
+            transform: scale(1.05);
+        }
+        .mega {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: bounce 1s infinite alternate;
+        }
+        .hospital-name {
+            display: inline-block;
+            animation: colorChange 2s infinite;
+            font-size: 2.5rem; /* Increased font size for effect */
+        }
+        @keyframes colorChange {
+            0% { color: #FF6347; } /* Tomato */
+            25% { color: #67B7F0; } /* Light blue */
+            50% { color: #FFDDC1; } /* Light peach */
+            75% { color: #FFABAB; } /* Light pink */
+            100% { color: #FF6F61; } /* Coral */
+        }
+        @keyframes bgChange {
+            0% { background-color: #FFDDC1; }
+            25% { background-color: #67B7F0; }
+            50% { background-color: #FFABAB; }
+            75% { background-color: #FF6347; }
+            100% { background-color: #FF6F61; }
+        }
+        .container {
+            margin: auto;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease;
+            flex: 1; /* Allow the container to grow */
+        }
+        .alert {
+            transition: opacity 0.5s ease, transform 0.3s;
+            opacity: 0; /* Start hidden */
+            transform: translateY(-10px);
+        }
+        .alert.show {
+            opacity: 1; /* Fade in */
+            transform: translateY(0);
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-10px);
+            }
+        }
+        .form-control {
+            border-radius: 5px;
+            border: 2px solid #FF6F61; /* Coral */
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-control:focus {
+            border-color: #FF3B30; /* Darker coral on focus */
+            box-shadow: 0 0 5px rgba(255, 99, 71, 0.5);
+        }
+        /* Button style for admin login */
+        .admin-login {
+            margin-top: 20px;
+            transition: background-color 0.3s;
+            background-color: #FFB74D; /* Light orange */
+            color: white;
+        }
+        .admin-login:hover {
+            background-color: #FFA726; /* Darker orange hover */
+        }
+        footer {
+            background-color: #FF6F61; /* Coral */
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            margin-top: auto; /* Push the footer to the bottom */
+        }
+    </style>
+</head>
+<body onload="restrictPastDate()" align="center">
+
+    <div class="mega">
+        <h1 class="hospital-name">Welcome to [Hospital Name]</h1>
+        <p>Your health is our priority</p>
+    </div>
+
+    <div class="container">
+        <h1>Book an Appointment</h1>
+        <form id="appointmentForm">
+            <div class="mb-3">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" name="name" placeholder="Enter your name" required>
+            </div>
+            <div class="mb-3">
+                <label for="mail" class="form-label">Email</label>
+                <input type="email" class="form-control" name="mail" placeholder="Enter your email" required>
+            </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">Appointment Date</label>
+                <input type="date" class="form-control" id="date" name="date" required>
+            </div>
+            <div class="mb-3">
+                <label for="time" class="form-label">Appointment Time</label>
+                <input type="time" class="form-control" id="time" name="time" required>
+            </div>
+            <button type="button" class="btn w-100" onclick="confirmSubmission()">Submit</button>
+        </form>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-success mt-3 show" role="alert">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        {% endwith %}
+        
+        <a href="{{ url_for('login') }}" class="btn admin-login">Admin Login</a>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">Confirm Appointment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to book this appointment?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmButton">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>123 Health St, Wellness City, HC 12345</p>
+        <p>&copy; 2024 [Hospital Name]. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" 
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" 
+    crossorigin="anonymous"></script>
+
+    <script>
+        function restrictPastDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').setAttribute('min', today);
+        }
+
+        function confirmSubmission() {
+            const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            modal.show();
+
+            document.getElementById('confirmButton').onclick = function() {
+                document.getElementById('appointmentForm').submit();
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const alertElement = document.querySelector('.alert');
+            if (alertElement) {
+                alertElement.classList.add('show');
+            }
+        });
+    </script>
+</body>
+</html>
